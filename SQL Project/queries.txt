@@ -1,0 +1,71 @@
+Query 1: Which are the 5 most popular music genres?
+
+SELECT Genre.Name AS Type, SUM(InvoiceLine.Quantity) AS Purchases
+FROM InvoiceLine
+JOIN Invoice
+ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+JOIN Track
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Genre
+ON Track.GenreId = Genre.GenreId
+GROUP BY Genre.Name
+ORDER BY Purchases DESC 
+LIMIT 5
+
+Query 2: Which are the top countries that have most listeners to the 5 most popular music genres?
+
+SELECT sub3.Type, sub3.Country, sub3.Purchases
+FROM 
+(SELECT Country, Type, MAX(Purchases) AS No_Purchases
+FROM 
+(SELECT Genre.Name AS Type, Invoice.BillingCountry AS Country, SUM(InvoiceLine.Quantity) AS Purchases
+FROM Invoice
+JOIN InvoiceLine
+ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+JOIN Track
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Genre
+ON Track.GenreId = Genre.GenreId
+GROUP BY Type, Country) sub1
+GROUP BY Type
+ORDER BY Purchases DESC) sub2
+JOIN (SELECT Genre.Name AS Type, Invoice.BillingCountry AS Country, SUM(InvoiceLine.Quantity) AS Purchases
+FROM Invoice
+JOIN InvoiceLine
+ON Invoice.InvoiceId = InvoiceLine.InvoiceId
+JOIN Track
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Genre
+ON Track.GenreId = Genre.GenreId
+GROUP BY Type, Country
+ORDER BY Purchases DESC) sub3
+ON sub3.Country = sub2.Country AND sub3.Type = sub2.Type AND sub3.Purchases = sub2.No_Purchases
+LIMIT 5
+
+
+Query 3: Who are the most popular artists?
+
+SELECT Artist.Name, Genre.Name AS Type,SUM(InvoiceLine.Quantity) AS Purchases
+FROM InvoiceLine
+JOIN Invoice
+ON InvoiceLine.InvoiceId = Invoice.InvoiceId
+JOIN Track
+ON InvoiceLine.TrackId = Track.TrackId
+JOIN Genre
+ON Track.GenreId = Genre.GenreId
+JOIN Album
+ON Track.AlbumId = Album.AlbumId
+JOIN Artist
+ON Album.ArtistId = Artist.ArtistId
+GROUP BY Artist.Name, Type
+HAVING SUM(InvoiceLine.Quantity) &gt;= 45
+ORDER BY Purchases DESC 
+
+Query 4: Who are the most popular media types?
+
+SELECT MediaType.Name AS Media_Type, COUNT(Track.TrackId) AS No_Tracks
+FROM MediaType
+JOIN Track
+ON MediaType.MediaTypeId = Track.MediaTypeId
+GROUP BY Media_Type
+ORDER BY No_Tracks DESC
